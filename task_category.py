@@ -1,12 +1,22 @@
 from datetime import datetime
-from typing import List
+from typing import List, Set
+from .base_item import BaseItem
 
-class TaskCategory:
+class TaskCategory(BaseItem):
+    categories_count = 0  # статическое поле
+    
     def __init__(self, name: str, description: str = ""):
-        self.name = name
+        super().__init__(name)
         self.description = description
-        self.created_at = datetime.now()
-        self.tasks: List['Task'] = []
+        self.tasks: Set['Task'] = set()  # используем множество вместо списка
+        TaskCategory.categories_count += 1
+    
+    @staticmethod
+    def get_categories_count() -> int:
+        return TaskCategory.categories_count
+    
+    def display(self) -> str:
+        return f"Категория: {self.name} ({len(self.tasks)} задач)"
 
     def add_task(self, task: 'Task'):
         self.tasks.append(task)

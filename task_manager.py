@@ -1,18 +1,26 @@
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import Set, Dict, Optional
 from .task import Task
 from .task_category import TaskCategory
 
+class TaskManagerException(Exception):
+    pass
+
 class TaskManager:
     def __init__(self):
-        self.tasks: List[Task] = []
-        self.categories: List[TaskCategory] = []
-        self.tags: List[str] = []
+        self.tasks: Set[Task] = set()  # используем множество
+        self.categories: Set[TaskCategory] = set()
+        self.tags: Set[str] = set()
     
     def add_category(self, name: str, description: str = "") -> TaskCategory:
-        category = TaskCategory(name, description)
-        self.categories.append(category)
-        return category
+        try:
+            if any(c.name == name for c in self.categories):
+                raise TaskManagerException(f"Категория '{name}' уже существует")
+            category = TaskCategory(name, description)
+            self.categories.add(category)
+            return category
+        except Exception as e:
+            raise TaskManagerException(f"Ошибка при создании категории: {str(e)}")
     
     def remove_category(self, category: TaskCategory):
         if category in self.categories:
@@ -22,11 +30,16 @@ class TaskManager:
             self.categories.remove(category)
     
     def add_task(self, title: str, priority: str = "normal", category: Optional[TaskCategory] = None) -> Task:
-        task = Task(title, priority)
-        if category:
-            category.add_task(task)
-        self.tasks.append(task)
-        return task
+        try:
+            task = Task(title, priority)
+            if category:
+                if category not in self.categories:
+                    raise TaskManagerException("Указанная категория не существует")
+                category.add_task(task)
+            self.tasks.add(task)
+            return task
+        except ValueError as e:
+            raise TaskManagerException(f"Ошибка при создании задачи: {str(e)}")
     
     def add_subtask(self, parent_task: Task, title: str, priority: str = "normal") -> Task:
         subtask = Task(title, priority)
