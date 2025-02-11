@@ -1,7 +1,9 @@
 from datetime import datetime
-from typing import Set, Dict, Optional
+from typing import Set, Dict, Optional, List
 from .task import Task
 from .task_category import TaskCategory
+from .note import Note
+from .reminder import Reminder
 
 class TaskManagerException(Exception):
     pass
@@ -11,6 +13,8 @@ class TaskManager:
         self.tasks: Set[Task] = set()  # используем множество
         self.categories: Set[TaskCategory] = set()
         self.tags: Set[str] = set()
+        self.notes: Set[Note] = set()
+        self.reminders: Set[Reminder] = set()
     
     def add_category(self, name: str, description: str = "") -> TaskCategory:
         try:
@@ -80,4 +84,34 @@ class TaskManager:
                 task.parent_task.remove_subtask(task)
             self.tasks.pop(index)
             return True
-        return False 
+        return False
+    
+    def add_note(self, title: str, content: str = "") -> Note:
+        try:
+            note = Note(title, content)
+            self.notes.add(note)
+            return note
+        except Exception as e:
+            raise TaskManagerException(f"Ошибка при создании заметки: {str(e)}")
+    
+    def add_reminder(self, title: str, due_date: datetime, description: str = "") -> Reminder:
+        try:
+            reminder = Reminder(title, due_date, description)
+            self.reminders.add(reminder)
+            return reminder
+        except Exception as e:
+            raise TaskManagerException(f"Ошибка при создании напоминания: {str(e)}")
+    
+    def list_notes(self) -> str:
+        if not self.notes:
+            return "Нет заметок"
+        return "\n".join(str(note) for note in self.notes)
+    
+    def list_reminders(self) -> str:
+        if not self.reminders:
+            return "Нет напоминаний"
+        return "\n".join(str(reminder) for reminder in self.reminders)
+    
+    def check_due_reminders(self) -> List[Reminder]:
+        """Возвращает список просроченных активных напоминаний"""
+        return [r for r in self.reminders if r.is_due()]
